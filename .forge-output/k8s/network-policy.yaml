@@ -5,7 +5,7 @@ metadata:
   labels:
     app: demo-weather
   annotations:
-    ai.initializ.forge/allowed-domains: "api.openai.com,wttr.in"
+    ai.initializ.forge/allowed-domains: "api-next.test.initializ.ai,api.openai.com,wttr.in"
 spec:
   podSelector:
     matchLabels:

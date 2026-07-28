@@ -3,10 +3,12 @@
   "mode": "allowlist",
   "allowed_domains": [
     "api.openai.com",
-    "wttr.in"
+    "wttr.in",
+    "api-next.test.initializ.ai"
   ],
   "tool_domains": [],
   "all_domains": [
+    "api-next.test.initializ.ai",
     "api.openai.com",
     "wttr.in"
   ]

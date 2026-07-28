@@ -7,6 +7,27 @@ model:
   name: gpt-5.4
   version: "latest"
 
+# Inbound platform auth: every A2A call presents a platform JWT, verified
+# against api-next /verify. Without this block a CI-built agent falls back
+# to its internal static runtime token and rejects platform tokens with
+# auth_fail not_for_me.
+auth:
+  required: true
+  providers:
+    - type: http_verifier
+      settings:
+        url: https://api-next.test.initializ.ai/verify
+        default_org: org_30368d6d
+
+# Reversible context compression (ctxzip): bulky tool outputs (the inlined
+# investor brief dominates) are swapped for retrievable markers after first
+# use, and every compression lands in the audit stream as
+# context_compressed with tokenizer-estimated savings. invocation_complete
+# carries the REALIZED wire savings, which the app surfaces in the ledger.
+compression:
+  enabled: true
+  ttl: "30m"
+
 egress:
   mode: allowlist
   allowed_domains:
