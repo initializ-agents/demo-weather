@@ -1,0 +1,25 @@
+agent_id: demo-weather
+version: 0.1.0
+framework: forge
+
+model:
+  provider: openai
+  name: gpt-5.4
+  version: "latest"
+
+egress:
+  mode: allowlist
+  allowed_domains:
+    - api.openai.com
+    - wttr.in
+
+secrets:
+  providers:
+    - env
+
+scheduler:
+  # Use the in-process file scheduler by default. The "auto" default would
+  # pick the Kubernetes CronJob backend when running in-cluster, which
+  # requires scheduler.kubernetes.service_url. Switch to backend: kubernetes
+  # (and set kubernetes.service_url) when you want durable CronJob scheduling.
+  backend: file
