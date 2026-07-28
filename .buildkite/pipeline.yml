@@ -1,0 +1,65 @@
+# Buildkite pipeline for demo-weather: build the agent image from the
+# COMMITTED .forge-output/ (Dockerfile used as-is — no forge build in CI),
+# push it to GitHub Container Registry, then deploy via the Initializ CLI.
+#
+# Buildkite variables expected (pipeline env / cluster secrets / agent hook):
+#   INITIALIZ_API_URL       — agent-builder base URL (all /api/v1/agents/* paths)
+#   INITIALIZ_AUTH_URL      — api-next base URL (/verify, used by `auth whoami`);
+#                             drop only if one gateway routes both on one host
+#   INITIALIZ_ORG_ID        — org_…
+#   INITIALIZ_WORKSPACE_ID  — ws_… (initializ-deploy.yaml sets no workspace)
+#   INITIALIZ_TOKEN         — workspace-scoped platform token (secret!)
+#   GHCR_USERNAME           — GitHub user/bot with write:packages on initializ-agents
+#   GHCR_TOKEN              — matching PAT (secret!)
+#   OPENAI_API_KEY          — optional; the deploy spec marks it optional, so
+#                             leaving it unset just omits it from the deploy
+#
+# Prefer keeping the secrets in Buildkite cluster secrets and reading them at
+# runtime (`buildkite-agent secret get INITIALIZ_TOKEN`) so they stay out of
+# step env and are redacted in logs; the steps below use plain env because the
+# variables are provided at the pipeline level.
+#
+# Escaping note: a single $ interpolates at pipeline-upload time; $$ defers to
+# runtime bash. Everything secret or computed on the agent uses $$.
+
+env:
+  REGISTRY: "ghcr.io"
+  IMAGE: "ghcr.io/initializ-agents/demo-weather"
+
+steps:
+  # One step: the docker build and the CLI's env-contract check both read
+  # .forge-output/, and Buildkite steps don't share a workspace. (To gate
+  # production, split the deploy behind a `block` step.)
+  - label: ":docker: build → :arrow_up: push → :rocket: deploy"
+    key: deploy-agent
+    if: build.branch == "main"
+    agents:
+      queue: default # needs docker on the agent
+    command: |
+      set -euo pipefail
+      mkdir -p bin
+      export PATH="$$PWD/bin:$$PATH"
+      TAG="sha-$${BUILDKITE_COMMIT:0:7}"
+
+      echo "--- :docker: Build $${IMAGE}:$${TAG} from committed .forge-output"
+      # .forge-output/ is tracked in git precisely so the Dockerfile generated
+      # by the vnext forge CLI is used verbatim here — CI never runs forge.
+      docker build -t "$$IMAGE:$$TAG" -t "$$IMAGE:latest" .forge-output
+
+      echo "--- :arrow_up: Push to $$REGISTRY"
+      echo "$$GHCR_TOKEN" | docker login "$$REGISTRY" -u "$$GHCR_USERNAME" --password-stdin
+      docker push "$$IMAGE:$$TAG"
+      docker push "$$IMAGE:latest"
+
+      echo "--- :package: Install initializ CLI"
+      curl -fsSL "https://github.com/initializ/cli/releases/latest/download/initializ_linux_amd64.tar.gz" \
+        | tar xz -C bin initializ
+
+      echo "--- :rocket: Deploy to Initializ"
+      initializ auth whoami   # preflight — exit 3 on invalid/revoked token fails here
+      initializ agent deploy -f initializ-deploy.yaml \
+        --image "$$IMAGE:$$TAG" \
+        --wait --timeout 10m
+      # CLI exit codes fail this step distinctly, no output parsing:
+      # 2 spec/env error, 3 auth, 4 not found, 5 server-side deploy failure,
+      # 6 --wait timeout.
