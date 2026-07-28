@@ -73,12 +73,18 @@ steps:
       # tarball URL the Dockerfile would otherwise pin does not exist. It also
       # guarantees runtime == the exact CLI that ran this build.
       forge build --local-bin "forge=$$PWD/bin/forge"
+      # forge bug (dockerfile_stage.go writeDockerignore): the generated
+      # .dockerignore always excludes .local-bins/, but the --local-bin
+      # Dockerfile COPYs from it — re-include just the forge binary
+      # (last-match-wins dockerignore semantics).
+      printf '!.local-bins/forge\n' >> .forge-output/.dockerignore
 
       echo "--- :docker: Build and push $${IMAGE}:$${TAG}"
       echo "$$GHCR_TOKEN" | docker login "$$REGISTRY" -u "$$GHCR_USERNAME" --password-stdin
-      docker build -t "$$IMAGE:$$TAG" -t "$$IMAGE:latest" .forge-output
-      docker push "$$IMAGE:$$TAG"
-      docker push "$$IMAGE:latest"
+      # --push on the build itself: the buildkite builder is a remote buildx
+      # driver, so a separate `docker push` would look for the image in the
+      # local daemon, which never receives it.
+      docker build --push -t "$$IMAGE:$$TAG" -t "$$IMAGE:latest" .forge-output
 
       echo "--- :package: Install initializ CLI"
       curl -fsSL "https://github.com/initializ/cli/releases/latest/download/initializ_linux_amd64.tar.gz" \
