@@ -39,8 +39,9 @@ steps:
   - label: ":hammer: forge build → :docker: push → :rocket: deploy"
     key: deploy-agent
     if: build.branch == "main"
-    agents:
-      queue: default # needs docker on the agent
+    # No agents.queue targeting: the job goes to the cluster's default queue.
+    # If you run multiple queues, pin one here (agents: {queue: <name>}) —
+    # the agent needs docker and outbound network access.
     command: |
       set -euo pipefail
       mkdir -p bin
