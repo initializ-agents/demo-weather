@@ -49,6 +49,19 @@ steps:
       TAG="sha-$${BUILDKITE_COMMIT:0:7}"
       ARCH="$$(uname -m | sed 's/aarch64/arm64/')"   # x86_64 or arm64
 
+      echo "--- :key: Preflight: required variables"
+      missing=""
+      for v in GHCR_USERNAME GHCR_TOKEN INITIALIZ_API_URL INITIALIZ_AUTH_URL \
+               INITIALIZ_ORG_ID INITIALIZ_WORKSPACE_ID INITIALIZ_TOKEN; do
+        [ -n "$${!v:-}" ] || missing="$$missing $$v"
+      done
+      if [ -n "$$missing" ]; then
+        echo "^^^ +++"   # auto-expand this group in the Buildkite UI
+        echo "Missing Buildkite variables:$$missing"
+        echo "Set them in the pipeline environment or cluster secrets (see header of .buildkite/pipeline.yml)."
+        exit 1
+      fi
+
       echo "--- :package: Install forge ($$FORGE_VERSION)"
       curl -fsSL "https://github.com/initializ/forge/releases/download/$${FORGE_VERSION}/forge-Linux-$${ARCH}.tar.gz" \
         | tar xz -C bin forge
