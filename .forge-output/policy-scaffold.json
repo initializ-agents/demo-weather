@@ -1,0 +1,19 @@
+{
+  "guardrails": [
+    {
+      "type": "content_filter",
+      "config": {
+        "enabled": true
+      }
+    },
+    {
+      "type": "no_pii"
+    },
+    {
+      "type": "jailbreak_protection"
+    },
+    {
+      "type": "no_secrets"
+    }
+  ]
+}

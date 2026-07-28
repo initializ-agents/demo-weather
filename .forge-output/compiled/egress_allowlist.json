@@ -1,0 +1,13 @@
+{
+  "profile": "strict",
+  "mode": "allowlist",
+  "allowed_domains": [
+    "api.openai.com",
+    "wttr.in"
+  ],
+  "tool_domains": [],
+  "all_domains": [
+    "api.openai.com",
+    "wttr.in"
+  ]
+}

@@ -1,6 +1,5 @@
 .env
 .forge/
-.forge-output/
 guardrails.json
 __pycache__/
 *.pyc

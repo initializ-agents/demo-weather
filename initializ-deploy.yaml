@@ -1,0 +1,59 @@
+# initializ-deploy.yaml — Initializ platform deploy manifest.
+# Lives in the agent's git repo next to forge.yaml; consumed by
+# `initializ agent deploy -f initializ-deploy.yaml` inside CI.
+apiVersion: initializ.ai/v1
+kind: AgentDeploy
+
+agent:
+  # Display/lookup name on the platform. Deploys are an UPSERT keyed on
+  # (workspace, name). Defaults to forge.yaml's agent_id when omitted.
+  name: demo-weather
+  # Agent runtime type. v1 supports "forge" (default); strands/langchain later.
+  type: forge
+  # Workspace id (ws_…). Optional — falls back to --workspace,
+  # INITIALIZ_WORKSPACE_ID, then the workspace baked into the token.
+  # workspace: ws_a1b2c3de
+
+# Image your CI just built & pushed to the registry configured on the
+# workspace's Environment. `--image` overrides this, so CI-templated tags
+# need no yq/sed:  initializ agent deploy -f … --image "$IMAGE_REF"
+image: ghcr.io/initializ-agents/demo-weather:latest
+
+forge:
+  # Path to forge.yaml, relative to this file. Default: ./forge.yaml
+  path: ./forge.yaml
+  # forge build output — the CLI reads the image's declared env-var union
+  # from build-manifest.json (or k8s/secrets.yaml). Default: ./.forge-output
+  outputDir: ./.forge-output
+
+# Environment variables for the agent container.
+#   value supports ${VAR} interpolation from the CI process environment, so
+#   secret VALUES come from the CI secret store — never from this file.
+#   secret: true  → lands only in the agent's k8s Secret (never persisted
+#                   in the platform DB).
+#   optional: true → silently omitted when the ${VAR} is unset; without it,
+#                   an unset reference fails the deploy (exit 2).
+#   $$ escapes a literal $.
+env:
+  - name: LOG_LEVEL
+    value: info
+  # Declared optional in build-manifest.json — omit from CI secrets when the
+  # workspace routes LLM traffic through the platform gateway instead.
+  - name: OPENAI_API_KEY
+    value: ${OPENAI_API_KEY}
+    secret: true
+    optional: true
+
+# Optional container port when the agent doesn't listen on forge's default 8080.
+# port: 9000
+
+# Optional runtime sizing; omitted fields use platform defaults.
+resources:
+  replicas: 1
+  requests: {cpu: 250m, memory: 256Mi}
+  limits: {cpu: "1", memory: 1Gi}
+
+# Default deploy behavior (flags always win).
+deploy:
+  wait: true
+  timeout: 10m

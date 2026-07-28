@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-weather
+  labels:
+    app: demo-weather
+    forge.initializ.ai/version: "0.1.0"
+    forge.initializ.ai/egress-profile: "strict"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-weather
+  template:
+    metadata:
+      labels:
+        app: demo-weather
+        forge.initializ.ai/egress-profile: "strict"
+    spec:
+      containers:
+        - name: demo-weather
+          image: debian:bookworm-slim
+          ports:
+            - containerPort: 8080
+          env:
+            # Platform policy file path (issue #89 / FWS-5). The volume
+            # mount below is optional; when no ConfigMap is present,
+            # the agent reads this path, finds it missing, and starts
+            # with no platform-policy constraints (pre-FWS-5 behavior).
+            - name: FORGE_PLATFORM_POLICY
+              value: /etc/forge/policy/platform-policy.yaml
+            - name: FORGE_MODEL_NAME
+              value: "gpt-5.4"
+            - name: FORGE_MODEL_PROVIDER
+              value: "openai"
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: demo-weather-secrets
+                  key: OPENAI_API_KEY
+                  optional: true
+          volumeMounts:
+            # Platform policy ConfigMap mount (issue #89 / FWS-5). Mounted
+            # readOnly. Operators (or platform deployers like initializ
+            # Command, custom controllers, GitOps tooling) create the
+            # `forge-platform-policy` ConfigMap with key `platform-policy.yaml`
+            # to apply workspace-level egress / tool / model bounds.
+            # See docs/security/platform-policy.md.
+            - name: platform-policy
+              mountPath: /etc/forge/policy
+              readOnly: true
+      volumes:
+        # Optional ConfigMap. When absent, the agent starts with no
+        # platform-policy constraints — same behavior as pre-FWS-5.
+        # `optional: true` is load-bearing: without it, the pod would
+        # fail to start when the ConfigMap doesn't exist, breaking
+        # self-managed deployments that don't need workspace bounds.
+        - name: platform-policy
+          configMap:
+            name: forge-platform-policy
+            optional: true

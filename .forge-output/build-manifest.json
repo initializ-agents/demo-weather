@@ -1,0 +1,29 @@
+{
+  "agent_id": "demo-weather",
+  "built_at": "2026-07-28T16:00:59Z",
+  "egress_mode": "allowlist",
+  "egress_profile": "strict",
+  "env_optional": [
+    "OPENAI_API_KEY"
+  ],
+  "files": [
+    ".dockerignore",
+    "Dockerfile",
+    "agent.json",
+    "compiled/egress_allowlist.json",
+    "compiled/security-audit.json",
+    "forge.yaml",
+    "guardrails.json",
+    "k8s/deployment.yaml",
+    "k8s/network-policy.yaml",
+    "k8s/secrets.yaml",
+    "k8s/service.yaml",
+    "policy-scaffold.json"
+  ],
+  "forge_version": "1.0",
+  "output_dir": "/Users/ibreakthecloud/Data/initializ/Workspace/initializ/aip/initializ-agents/demo-weather/.forge-output",
+  "skills_count": 2,
+  "skills_spec_version": "agentskills-v1",
+  "tool_interface_version": "1.0",
+  "version": "0.1.0"
+}

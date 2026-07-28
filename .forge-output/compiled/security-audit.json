@@ -1,0 +1,70 @@
+{
+  "timestamp": "2026-07-28T16:00:59Z",
+  "skill_count": 2,
+  "aggregate_score": {
+    "value": 16,
+    "level": "low"
+  },
+  "assessments": [
+    {
+      "skill_name": "weather_current",
+      "score": {
+        "value": 16,
+        "level": "low"
+      },
+      "factors": [
+        {
+          "category": "egress",
+          "description": "unknown domain: wttr.in",
+          "points": 10
+        },
+        {
+          "category": "binary",
+          "description": "standard binary: curl",
+          "points": 3
+        },
+        {
+          "category": "binary",
+          "description": "standard binary: jq",
+          "points": 3
+        }
+      ],
+      "recommendations": [
+        "Verify unknown egress domains are expected and add to trusted list if appropriate"
+      ]
+    },
+    {
+      "skill_name": "weather_forecast",
+      "score": {
+        "value": 16,
+        "level": "low"
+      },
+      "factors": [
+        {
+          "category": "egress",
+          "description": "unknown domain: wttr.in",
+          "points": 10
+        },
+        {
+          "category": "binary",
+          "description": "standard binary: curl",
+          "points": 3
+        },
+        {
+          "category": "binary",
+          "description": "standard binary: jq",
+          "points": 3
+        }
+      ],
+      "recommendations": [
+        "Verify unknown egress domains are expected and add to trusted list if appropriate"
+      ]
+    }
+  ],
+  "policy_summary": {
+    "total_violations": 0,
+    "errors": 0,
+    "warnings": 0,
+    "passed": true
+  }
+}

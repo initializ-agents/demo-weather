@@ -1,0 +1,24 @@
+# --- Secrets ---
+.env
+.env.*
+*.enc
+secrets.enc
+*.key
+*.pem
+
+# --- Operator-side artifacts (issue #147) ---
+# k8s/ is for kubectl apply on the host, not the runtime image.
+k8s/
+# build-manifest.json is consumed by forge package / forge export.
+build-manifest.json
+# compiled/ holds the egress allowlist (used by forge package and
+# the K8s NetworkPolicy) plus the security audit report; the runtime
+# never opens any of them. compiled/prompt.txt and
+# compiled/skills/skills.json are no longer generated (#147).
+compiled/
+# Recursive — the Dockerfile shouldn't be baked into its own image.
+Dockerfile
+.dockerignore
+# Build-only local binary stash; binaries land in /usr/local/bin via
+# the bin stage already.
+.local-bins/

@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: demo-weather-network
+  labels:
+    app: demo-weather
+  annotations:
+    ai.initializ.forge/allowed-domains: "api.openai.com,wttr.in"
+spec:
+  podSelector:
+    matchLabels:
+      app: demo-weather
+  policyTypes:
+    - Egress
+  egress:
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
